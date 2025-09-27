@@ -48,6 +48,15 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.convertInline("![alt text](image.png)") == "<img src=\"image.png\" alt=\"alt text\"/>")
   }
 
+  test("getBlockquotePrefix") {
+    assert(Converter.getBlockquotePrefix(">A") == ">")
+    assert(Converter.getBlockquotePrefix("> A") == "> ")
+    assert(Converter.getBlockquotePrefix(">>A") == ">>")
+    assert(Converter.getBlockquotePrefix(">> Abc def") == ">> ")
+    assert(Converter.getBlockquotePrefix("> >  > Abc") == "> >  > ")
+    assert(Converter.getBlockquotePrefix(">>>> Abc > jkljlj") == ">>>> ")
+  }
+
   def readResource(path: String): String =
     Source.fromResource(path).mkString
 

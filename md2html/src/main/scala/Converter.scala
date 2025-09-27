@@ -9,6 +9,8 @@ object Converter {
   val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
 
+  val BLOCKQUOTE_STYLE = "border-left:4px solid #888; background:rgba(0,0,0,0.05); padding:0.75em 1em; margin:1em 0;"
+
   /**
    * Converts given markdown document to HTML document.
    *
@@ -17,6 +19,7 @@ object Converter {
    * * Headers.
    * * Codeblocks.
    * * Horizontal rules.
+   * * Blockquotes.
    * * All the inline formatting features (see {@link convertInline}).
    * TODO:
    * * Lists (ordered and unordered).
@@ -41,7 +44,7 @@ object Converter {
     }
 
     for (line <- lines) {
-      if (line.startsWith("```"))  {
+      if (line.startsWith("```")) {
         // Beginning or end of a code block.
         if (!isInsideCodeBlock) {
           // Code block starts.
@@ -85,7 +88,14 @@ object Converter {
     sb.append("</h" + level + ">\n")
   }
 
-  def convertLineGroup(sb: StringBuilder, lineGroup: List[String]) = {
+  // Converts group of lines without line breaks, which is normally a paragrpah.
+  def convertLineGroup(sb: StringBuilder, lineGroup: List[String]) : Unit = {
+    // If every line begins with ">", this is blockquote.
+    if (lineGroup(0).startsWith(">")) {
+      convertBlockQuote(sb, lineGroup, 1)
+      return
+    }
+
     // For now, just join them into a single paragprah.
     sb.append("<p>\n")
     for (line <- lineGroup) {
@@ -93,6 +103,29 @@ object Converter {
       sb.append("\n")
     }
     sb.append("</p>\n")
+  }
+
+  // Converts group of lines known to be a blockquote.
+  def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer) : Unit = {
+    sb.append(s"<blockquote style='$BLOCKQUOTE_STYLE'>\n")
+
+    val numLinesAtThisLevel: Int = lineGroup.takeWhile(line => getBlockquotePrefix(line).count(_ == '>') <= level).size
+    val (linesAtThisLevel, linesAtNextLevel) = lineGroup.splitAt(numLinesAtThisLevel)
+    for (line <- linesAtThisLevel) {
+      val quote_prefix = getBlockquotePrefix(line)
+      sb.append(convertInline(line.substring(quote_prefix.length)))
+      sb.append("\n")
+    }
+
+    if (linesAtNextLevel.nonEmpty) {
+      convertBlockQuote(sb, linesAtNextLevel, level + 1)
+    }
+
+    sb.append("</blockquote>\n")
+  }
+
+  def getBlockquotePrefix(line: String): String = {
+    line.takeWhile(c => c == '>' || c == ' ')
   }
 
   /**
@@ -105,8 +138,6 @@ object Converter {
    * * Hyperlinks.
    * * Images.
    * TODO:
-   * * Lists (ordered and unordered).
-   * * Blockquotes.
    * * Inline code.
    * * Strikethrough text.
    * * Reference-style links.
