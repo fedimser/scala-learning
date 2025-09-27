@@ -1,4 +1,5 @@
 import scala.collection.mutable.ListBuffer
+import scala.io.Source
 
 object Converter {
   val HEADER_PATTERN = raw"^#{1,6} +.*".r // 1–6 #, at least one space, then anything
@@ -10,8 +11,6 @@ object Converter {
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
   val STRIKE_THROUGH_PATTERN = """(~~)(.+?)\1""".r
   val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
-
-  val BLOCKQUOTE_STYLE = "border-left:4px solid #888; background:rgba(0,0,0,0.05); padding:0.75em 1em; margin:1em 0;"
 
   /**
    * Converts given markdown document to HTML document.
@@ -33,7 +32,14 @@ object Converter {
       .map(_.trim)
       .toList
 
-    val sb = new StringBuilder("<html>\n");
+    val sb = new StringBuilder()
+    sb.append("<html>\n");
+    sb.append("<head>\n<style>\n")
+    sb.append(Source.fromResource("style.css").mkString)
+    sb.append("</style>\n</head>\n")
+    sb.append("<body>\n")
+
+
     val currentGroup = ListBuffer[String]()
     var isInsideCodeBlock = false
 
@@ -78,6 +84,7 @@ object Converter {
     }
 
     flushCurrentGroup()
+    sb.append("</body>\n");
     sb.append("</html>\n");
     return sb.toString
   }
@@ -109,7 +116,7 @@ object Converter {
 
   // Converts group of lines known to be a blockquote.
   def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer) : Unit = {
-    sb.append(s"<blockquote style='$BLOCKQUOTE_STYLE'>\n")
+    sb.append(s"<blockquote>\n")
 
     val numLinesAtThisLevel: Int = lineGroup.takeWhile(line => getBlockquotePrefix(line).count(_ == '>') <= level).size
     val (linesAtThisLevel, linesAtNextLevel) = lineGroup.splitAt(numLinesAtThisLevel)
