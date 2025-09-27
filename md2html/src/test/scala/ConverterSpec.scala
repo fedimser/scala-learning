@@ -40,6 +40,10 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.convertInline("___text___") == "<strong><em>text</em></strong>")
   }
 
+  test("converts links") {
+    assert(Converter.convertInline("[text](link)") == "<a href=\"link\">text</a>")
+  }
+
 
   def readResource(path: String): String =
     Source.fromResource(path).mkString

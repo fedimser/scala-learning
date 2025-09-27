@@ -5,6 +5,7 @@ object Converter {
   val ITALIC_PATTERN = """(\*|_)(.+?)\1""".r
   val BOLD_PATTERN = """(\*\*|__)(.+?)\1""".r
   val BOLD_ITALIC_PATTERN = """(\*\*\*|___)(.+?)\1""".r
+  val LINK_PATTERN = """\[(.+?)\]\((.+?)\)""".r
 
   /**
    * Converts given markdown document to HTML document.
@@ -12,10 +13,10 @@ object Converter {
    * Supported features:
    * * Basic paragraphs.
    * * Headers.
+   * * Codeblocks.
    * * All the inline formatting features (see {@link convertInline}).
    * TODO:
    * * Lists (ordered and unordered).
-   * * Codeblocks.
    * * Horizontal rules.
    * * Tables.
    */
@@ -96,9 +97,9 @@ object Converter {
    *
    * Supported features:
    * * Emphasis (italic, bold, bold italic).
+   * * Hyperlinks.
    * TODO:
    * * Lists (ordered and unordered).
-   * * Hyperlinks.
    * * Images.
    * * Blockquotes.
    * * Inline code.
@@ -109,6 +110,7 @@ object Converter {
     s = BOLD_ITALIC_PATTERN.replaceAllIn(s, m => s"<strong><em>${m.group(2)}</em></strong>")
     s = BOLD_PATTERN.replaceAllIn(s, m => s"<strong>${m.group(2)}</strong>")
     s = ITALIC_PATTERN.replaceAllIn(s, m => s"<em>${m.group(2)}</em>")
+    s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
     return s
   };
 
