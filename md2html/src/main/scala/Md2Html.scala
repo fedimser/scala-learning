@@ -54,7 +54,8 @@ object Md2Html {
       println(s"Wrote converted HTML to $outputFileName")
     } catch {
       case e: Exception =>
-        println(s"Error: ${e.getMessage}")
+        println(s"Error while converting: ${e.getMessage}")
+        e.printStackTrace()
     }
   }
 }

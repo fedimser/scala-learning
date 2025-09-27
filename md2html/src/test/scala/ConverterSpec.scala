@@ -6,22 +6,28 @@ import scala.jdk.CollectionConverters._
 import org.scalatest.funsuite.AnyFunSuite
 
 class ConverterSpec extends AnyFunSuite {
+
+  def extractBody(html: String): String = {
+    val bodyPattern = "(?s)<body[^>]*>(.*?)</body>".r
+    bodyPattern.findFirstMatchIn(html).map(_.group(1)).get.trim
+  }
+
   test("converts single word") {
     val source = "Word."
-    val expected = "<body>\n<p>\nWord.\n</p>\n</body>\n"
-    assert(Converter.convertDocument(source).contains(expected))
+    val expected = "<p>\nWord.\n</p>"
+    assert(extractBody(Converter.convertDocument(source)) == expected)
   }
 
   test("converts two paragraphs") {
     val source = "a\nb\n\nc"
-    val expected = "<body>\n<p>\na\nb\n</p>\n<p>\nc\n</p>\n</body>\n"
-    assert(Converter.convertDocument(source).contains(expected))
+    val expected = "<p>\na\nb\n</p>\n<p>\nc\n</p>"
+    assert(extractBody(Converter.convertDocument(source)) == expected)
   }
 
   test("converts single header") {
     val source = "# Header"
-    val expected = "<body>\n<h1>Header</h1>\n</body>\n"
-    assert(Converter.convertDocument(source).contains(expected))
+    val expected = "<h1>Header</h1>"
+    assert(extractBody(Converter.convertDocument(source)) == expected)
   }
 
   test("converts italics") {
@@ -63,6 +69,30 @@ class ConverterSpec extends AnyFunSuite {
 
   test("converts inline code") {
     assert(Converter.convertInline("Inline `code`.") == "Inline <code>code</code>.")
+  }
+
+  test("converts unordered list") {
+    val source = "* Item 1\n* Item 2"
+    val expected = "<ul>\n<li>\nItem 1\n</li>\n<li>\nItem 2\n</li>\n</ul>"
+    assert(extractBody(Converter.convertDocument(source)) == expected)
+  }
+
+  test("converts ordered list") {
+    val source = "1. Item 1\n2. Item 2"
+    val expected = "<ol>\n<li>\nItem 1\n</li>\n<li>\nItem 2\n</li>\n</ol>"
+    assert(extractBody(Converter.convertDocument(source)) == expected)
+  }
+
+  test("isListItem") {
+    assert(Converter.isListItem("* Aaa"))
+    assert(Converter.isListItem(" * Aaa"))
+    assert(Converter.isListItem(" + Aaa"))
+    assert(Converter.isListItem("- Aaa"))
+    assert(Converter.isListItem("10. Aaa"))
+    assert(!Converter.isListItem("Aaa"))
+    assert(!Converter.isListItem("10.Aaa"))
+    assert(!Converter.isListItem("*Aaa"))
+    assert(!Converter.isListItem("** Aaa"))
   }
 
   def readResource(path: String): String =

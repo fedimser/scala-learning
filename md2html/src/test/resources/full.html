@@ -93,9 +93,9 @@ Strikethrough uses two tildes. <del>Scratch this.</del>
 <h1>Lists</h1>
 <pre style='background-color: #f0f0f0; padding: 10px;'>1. First ordered list item
 2. Another item
-⋅⋅* Unordered sub-list.
+⋅⋅⋅* Unordered sub-list.
 1. Actual numbers don't matter, just that it's a number
-⋅⋅1. Ordered sub-list
+⋅⋅⋅1. Ordered sub-list
 4. And another item.
 
 ⋅⋅⋅You can have properly indented paragraphs within list items. Notice the blank line above, and the leading spaces (at least one, but we'll use three here to also align the raw Markdown).
@@ -124,47 +124,113 @@ Strikethrough uses two tildes. <del>Scratch this.</del>
 * Ac tristique libero volutpat at
 + Facilisis in pretium nisl aliquet
 - Nulla volutpat aliquam velit
-+ Very easy!</pre><p>
-1. First ordered list item
-2. Another item
-⋅⋅* Unordered sub-list.
-1. Actual numbers don't matter, just that it's a number
-⋅⋅1. Ordered sub-list
-4. And another item.
++ Very easy!</pre><ol>
+<li>
+First ordered list item
+</li>
+<li>
+Another item
+</li>
+<ul>
+<li>
+Unordered sub-list.
+</li>
+</ul>
+<li>
+Actual numbers don't matter, just that it's a number
+</li>
+<ol>
+<li>
+Ordered sub-list
+</li>
+</ol>
+<li>
+And another item.
+</li>
+</ol>
+<p>
+You can have properly indented paragraphs within list items. Notice the blank line above, and the leading spaces (at least one, but we'll use three here to also align the raw Markdown).
 </p>
 <p>
-⋅⋅⋅You can have properly indented paragraphs within list items. Notice the blank line above, and the leading spaces (at least one, but we'll use three here to also align the raw Markdown).
+To have a line break without a paragraph, you will need to use two trailing spaces.⋅⋅
+Note that this line is separate, but within the same paragraph.⋅⋅
+(This is contrary to the typical GFM line break behaviour, where trailing spaces are not required.)
 </p>
-<p>
-⋅⋅⋅To have a line break without a paragraph, you will need to use two trailing spaces.⋅⋅
-⋅⋅⋅Note that this line is separate, but within the same paragraph.⋅⋅
-⋅⋅⋅(This is contrary to the typical GFM line break behaviour, where trailing spaces are not required.)
-</p>
-<p>
-* Unordered list can use asterisks
-- Or minuses
-+ Or pluses
-</p>
-<p>
-1. Make my changes
-1. Fix bug
-2. Improve formatting
-- Make the headings bigger
-2. Push my commits to GitHub
-3. Open a pull request
-* Describe my changes
-* Mention all the members of my team
-* Ask for feedback
-</p>
-<p>
-+ Create a list by starting a line with <code>+</code>, <code>-</code>, or <code>*</code>
-+ Sub-lists are made by indenting 2 spaces:
-- Marker character change forces new list start:
-* Ac tristique libero volutpat at
-+ Facilisis in pretium nisl aliquet
-- Nulla volutpat aliquam velit
-+ Very easy!
-</p>
+<ul>
+<li>
+Unordered list can use asterisks
+</li>
+<li>
+Or minuses
+</li>
+<li>
+Or pluses
+</li>
+</ul>
+<ol>
+<li>
+Make my changes
+</li>
+<ol>
+<li>
+Fix bug
+</li>
+<li>
+Improve formatting
+</li>
+<ul>
+<li>
+Make the headings bigger
+</li>
+</ul>
+</ol>
+<li>
+Push my commits to GitHub
+</li>
+<li>
+Open a pull request
+</li>
+<ul>
+<li>
+Describe my changes
+</li>
+<li>
+Mention all the members of my team
+</li>
+<ul>
+<li>
+Ask for feedback
+</li>
+</ul>
+</ul>
+</ol>
+<ul>
+<li>
+Create a list by starting a line with <code>+</code>, <code>-</code>, or <code>*</code>
+</li>
+<li>
+Sub-lists are made by indenting 2 spaces:
+</li>
+<ul>
+<li>
+Marker character change forces new list start:
+</li>
+<ul>
+<li>
+Ac tristique libero volutpat at
+</li>
+<li>
+Facilisis in pretium nisl aliquet
+</li>
+<li>
+Nulla volutpat aliquam velit
+</li>
+</ul>
+</ul>
+<li>
+Very easy!
+</li>
+</ul>
 <hr>
 <h1>Task lists</h1>
 <pre style='background-color: #f0f0f0; padding: 10px;'>- [x] Finish my changes
@@ -173,15 +239,29 @@ Strikethrough uses two tildes. <del>Scratch this.</del>
 - [x] @mentions, #refs, [links](), **formatting**, and <del>tags</del> supported
 - [x] list syntax required (any unordered or ordered list supported)
 - [x] this is a complete item
-- [ ] this is an incomplete item</pre><p>
-- [x] Finish my changes
-- [ ] Push my commits to GitHub
-- [ ] Open a pull request
-- [x] @mentions, #refs, [links](), <strong>formatting</strong>, and <del>tags</del> supported
-- [x] list syntax required (any unordered or ordered list supported)
-- [ ] this is a complete item
-- [ ] this is an incomplete item
-</p>
+- [ ] this is an incomplete item</pre><ul>
+<li>
+[x] Finish my changes
+</li>
+<li>
+[ ] Push my commits to GitHub
+</li>
+<li>
+[ ] Open a pull request
+</li>
+<li>
+[x] @mentions, #refs, [links](), <strong>formatting</strong>, and <del>tags</del> supported
+</li>
+<li>
+[x] list syntax required (any unordered or ordered list supported)
+</li>
+<li>
+[ ] this is a complete item
+</li>
+<li>
+[ ] this is an incomplete item
+</li>
+</ul>
 <hr>
 <h1>Ignoring Markdown formatting</h1>
 <p>

@@ -11,6 +11,8 @@ object Converter {
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
   val STRIKE_THROUGH_PATTERN = """(~~)(.+?)\1""".r
   val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
+  val OL_PREFIX_PATTERN = """^\s*\d+\.\s+""".r
+  val UL_PREFIX_PATTERN = """^\s*[*+-]\s+""".r
 
   /**
    * Converts given markdown document to HTML document.
@@ -21,15 +23,14 @@ object Converter {
    * * Codeblocks.
    * * Horizontal rules.
    * * Blockquotes.
+   * * Lists (ordered and unordered, with nesting).
    * * All the inline formatting features (see {@link convertInline}).
    * TODO:
-   * * Lists (ordered and unordered).
    * * Tables.
    */
   def convertDocument(source: String): String = {
     val lines: List[String] = source
       .linesIterator
-      .map(_.trim)
       .toList
 
     val sb = new StringBuilder()
@@ -42,16 +43,24 @@ object Converter {
 
     val currentGroup = ListBuffer[String]()
     var isInsideCodeBlock = false
+    var isInsideList = false
 
     // Writes accumulated lines to result.
     def flushCurrentGroup() = {
       if (currentGroup.nonEmpty) {
-        convertLineGroup(sb, currentGroup.toList);
+        if (isInsideList) {
+          convertList(sb, currentGroup.toList)
+          isInsideList = false
+        } else {
+          convertLineGroup(sb, currentGroup.toList)
+        };
         currentGroup.clear()
       }
     }
 
-    for (line <- lines) {
+    for (originalLine <- lines) {
+      val line = originalLine.trim
+
       if (line.startsWith("```")) {
         // Beginning or end of a code block.
         if (!isInsideCodeBlock) {
@@ -77,6 +86,12 @@ object Converter {
       } else if (line == "") {
         // This is an empty line. Finalize previous line group.
         flushCurrentGroup()
+      } else if (isInsideList) {
+        currentGroup += originalLine;
+      } else if (isListItem(line)) {
+        flushCurrentGroup()
+        currentGroup += line;
+        isInsideList = true
       } else {
         // Append line to the current group.
         currentGroup += line;
@@ -113,6 +128,59 @@ object Converter {
     }
     sb.append("</p>\n")
   }
+
+  // Converts group of lines without line breaks, known to represent a list.
+  def convertList(sb: StringBuilder, lineGroup: List[String]) : Unit = {
+    val isUnordered = UL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
+    val isOrdered = OL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
+    assert(isUnordered || isOrdered)
+    val tag = if (isUnordered) "ul" else "ol"
+    val prefixPattern =  if (isUnordered) UL_PREFIX_PATTERN else OL_PREFIX_PATTERN
+    sb.append("<"+ tag + ">\n")
+
+    var linesForCurrentItem = ListBuffer[String]()
+
+    def finalizeListItem(): Unit = {
+      if (linesForCurrentItem.isEmpty) {
+        return
+      }
+      val n = linesForCurrentItem.takeWhile(l => !isListItem(l)).size
+      val (linesForItem, linesForNestedList) = linesForCurrentItem.toList.splitAt(n)
+      sb.append("<li>\n")
+      for (line <- linesForItem) {
+        sb.append(convertInline(line))
+        sb.append("\n")
+      }
+      sb.append("</li>\n")
+      if (linesForNestedList.nonEmpty) {
+        convertList(sb, linesForNestedList)
+      }
+      linesForCurrentItem.clear()
+    }
+
+    var curIndent = 1000
+    for (line <- lineGroup) {
+      val numLeadingSpaces = line.takeWhile(c => c == ' ').size
+      val prefix = prefixPattern.findFirstIn(line)
+      if (prefix.isDefined && numLeadingSpaces < curIndent) {
+        // This is the start of next item.
+        finalizeListItem()
+        curIndent = prefix.get.length
+        linesForCurrentItem += line.substring(curIndent)
+      } else {
+        // This is continuation of current item.
+        linesForCurrentItem += line.substring(Math.min(numLeadingSpaces, curIndent))
+      }
+    }
+    finalizeListItem()
+
+    sb.append("</"+ tag + ">\n")
+  }
+
+  def isListItem(line:String) : Boolean = {
+    return OL_PREFIX_PATTERN.findPrefixOf(line).isDefined || UL_PREFIX_PATTERN.findPrefixOf(line).isDefined
+  }
+
 
   // Converts group of lines known to be a blockquote.
   def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer) : Unit = {
