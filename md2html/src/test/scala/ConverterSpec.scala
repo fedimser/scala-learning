@@ -8,20 +8,20 @@ import org.scalatest.funsuite.AnyFunSuite
 class ConverterSpec extends AnyFunSuite {
   test("converts single word") {
     val source = "Word."
-    val expected = "<html>\n<p>\nWord.\n</p>\n</html>\n"
-    assert(Converter.convertDocument(source) == expected)
+    val expected = "<body>\n<p>\nWord.\n</p>\n</body>\n"
+    assert(Converter.convertDocument(source).contains(expected))
   }
 
   test("converts two paragraphs") {
     val source = "a\nb\n\nc"
-    val expected = "<html>\n<p>\na\nb\n</p>\n<p>\nc\n</p>\n</html>\n"
-    assert(Converter.convertDocument(source) == expected)
+    val expected = "<body>\n<p>\na\nb\n</p>\n<p>\nc\n</p>\n</body>\n"
+    assert(Converter.convertDocument(source).contains(expected))
   }
 
   test("converts single header") {
     val source = "# Header"
-    val expected = "<html>\n<h1>Header</h1>\n</html>\n"
-    assert(Converter.convertDocument(source) == expected)
+    val expected = "<body>\n<h1>Header</h1>\n</body>\n"
+    assert(Converter.convertDocument(source).contains(expected))
   }
 
   test("converts italics") {

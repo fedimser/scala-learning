@@ -1,19 +1,37 @@
 import scala.io.Source
 import java.io.{File, PrintWriter}
+import java.nio.file.{Files, Paths}
 
 object Md2Html {
   def main(args: Array[String]): Unit = {
     if (args.length != 1) {
-      println("Usage: Md2Html <filename.md>")
+      println("Usage: Md2Html <filename.md|directory>")
       sys.exit(1)
     }
 
     val inputFileName = args(0)
-    if (!inputFileName.endsWith(".md")) {
-      println("Error: input file must have .md extension")
+    if (inputFileName.endsWith(".md")) {
+      convertFile(inputFileName)
+      return
+    }
+
+    val dir = new File(inputFileName)
+    if (!dir.exists || !dir.isDirectory) {
+      println(s"$inputFileName is neither .md file nor a directory")
       sys.exit(1)
     }
 
+    val inputFileNames: List[String] = dir.list()
+      .filter(p => p.endsWith(".md"))
+      .toList
+    for (inputFileName <- inputFileNames) {
+      convertFile(new File(dir, inputFileName).getAbsolutePath())
+    }
+  }
+
+  def convertFile(inputFileName: String): Unit = {
+    assert(inputFileName.endsWith(".md"))
+    println(s"Converting $inputFileName...")
     val outputFileName = inputFileName.stripSuffix(".md") + ".html"
 
     try {
