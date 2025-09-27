@@ -20,6 +20,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Setup SBT
+        uses: actions/setup-sbt@v2
+
       - name: Cache SBT
         uses: actions/cache@v3
         with:
@@ -29,6 +32,10 @@ jobs:
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
           restore-keys: |
             ${{ runner.os }}-sbt-
+
+      - name: Compile md2html
+        working-directory: ./md2html
+        run: sbt compile
 
       - name: Test md2html
         working-directory: ./md2html
