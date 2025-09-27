@@ -61,6 +61,10 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.convertInline("~~text~~") == "<del>text</del>")
   }
 
+  test("converts inline code") {
+    assert(Converter.convertInline("Inline `code`.") == "Inline <code>code</code>.")
+  }
+
   def readResource(path: String): String =
     Source.fromResource(path).mkString
 

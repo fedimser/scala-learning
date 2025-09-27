@@ -18,3 +18,7 @@ Lorem *ipsum* dolor **sit amet**, consectetur *adipiscing* elit,
 
 This is ~~some~~ text, ~~more text~~, can even do in the 
 mid~~ddd~~le of a word.
+
+### Inline code
+
+Inline `code`.

@@ -9,6 +9,7 @@ object Converter {
   val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
   val STRIKE_THROUGH_PATTERN = """(~~)(.+?)\1""".r
+  val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
 
   val BLOCKQUOTE_STYLE = "border-left:4px solid #888; background:rgba(0,0,0,0.05); padding:0.75em 1em; margin:1em 0;"
 
@@ -139,8 +140,8 @@ object Converter {
    * * Hyperlinks.
    * * Images.
    * * Strikethrough text.
-   * TODO:
    * * Inline code.
+   * TODO:
    * * Reference-style links.
    */
   def convertInline(source: String): String = {
@@ -151,6 +152,7 @@ object Converter {
     s = IMAGE_PATTERN.replaceAllIn(s, m => s"""<img src="${m.group(2)}" alt="${m.group(1)}"/>""")
     s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
     s = STRIKE_THROUGH_PATTERN.replaceAllIn(s, m => s"<del>${m.group(2)}</del>")
+    s = INLINE_CODE_PATTERN.replaceAllIn(s, m => s"<code>${m.group(2)}</code>")
     return s
   };
 
