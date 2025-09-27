@@ -27,23 +27,46 @@ object Converter {
 
     val sb = new StringBuilder("<html>\n");
     val currentGroup = ListBuffer[String]()
+    var isInsideCodeBlock = false
 
-    for (line <- lines :+ "") {
-      if (HEADER_PATTERN.matches(line)) {
+    // Writes accumulated lines to result.
+    def flushCurrentGroup() = {
+      if (currentGroup.nonEmpty) {
+        convertLineGroup(sb, currentGroup.toList);
+        currentGroup.clear()
+      }
+    }
+
+    for (line <- lines) {
+      if (line == "```")  {
+        // Beginning or end of a code block.
+        if (!isInsideCodeBlock) {
+          // Code block starts.
+          flushCurrentGroup()
+          isInsideCodeBlock = true
+        } else {
+          // Code block ends. Write current group to result as is.
+          sb.append("<pre style='background-color: #f0f0f0; padding: 10px;'>")
+          sb.append(currentGroup.mkString("\n"))
+          sb.append("</pre>")
+          currentGroup.clear()
+          isInsideCodeBlock = false
+        }
+      } else if (isInsideCodeBlock) {
+        currentGroup += line
+      } else if (HEADER_PATTERN.matches(line)) {
         // This is a header.
         convertHeader(sb, line);
       } else if (line == "") {
         // This is an empty line. Finalize previous line group.
-        if (currentGroup.nonEmpty) {
-          convertLineGroup(sb, currentGroup.toList);
-          currentGroup.clear()
-        }
+        flushCurrentGroup()
       } else {
         // Append line to the current group.
         currentGroup += line;
       }
     }
 
+    flushCurrentGroup()
     sb.append("</html>\n");
     return sb.toString
   }
