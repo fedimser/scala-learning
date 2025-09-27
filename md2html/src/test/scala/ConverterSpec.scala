@@ -57,6 +57,10 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.getBlockquotePrefix(">>>> Abc > jkljlj") == ">>>> ")
   }
 
+  test("converts strikethrough text") {
+    assert(Converter.convertInline("~~text~~") == "<del>text</del>")
+  }
+
   def readResource(path: String): String =
     Source.fromResource(path).mkString
 

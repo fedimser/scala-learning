@@ -13,3 +13,8 @@ Some text, ***bold italics***, more text, ___more bold italics___.
 
 Lorem *ipsum* dolor **sit amet**, consectetur *adipiscing* elit,
 ***sed do eiusmod*** tempor *incididunt* ut labore et **dolore** magna aliqua. 
+
+### Strike through
+
+This is ~~some~~ text, ~~more text~~, can even do in the 
+mid~~ddd~~le of a word.
