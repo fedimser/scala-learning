@@ -24,7 +24,7 @@ object Md2Html {
         source.close()
       }
 
-      val result: String = Converter.convert(content)
+      val result: String = Converter.convertDocument(content)
 
       val writer = new PrintWriter(new File(outputFileName))
       try {
