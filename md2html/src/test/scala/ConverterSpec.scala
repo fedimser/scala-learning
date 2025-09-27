@@ -24,6 +24,22 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.convertDocument(source) == expected)
   }
 
+  test("converts italics") {
+    assert(Converter.convertInline("*text*") == "<em>text</em>")
+    assert(Converter.convertInline("_text_") == "<em>text</em>")
+    assert(Converter.convertInline("_text*") == "_text*")
+  }
+
+  test("converts bold") {
+    assert(Converter.convertInline("**text**") == "<strong>text</strong>")
+    assert(Converter.convertInline("__text__") == "<strong>text</strong>")
+  }
+
+  test("converts bold italic") {
+    assert(Converter.convertInline("***text***") == "<strong><em>text</em></strong>")
+    assert(Converter.convertInline("___text___") == "<strong><em>text</em></strong>")
+  }
+
 
   def readResource(path: String): String =
     Source.fromResource(path).mkString
