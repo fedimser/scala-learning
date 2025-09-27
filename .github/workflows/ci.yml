@@ -19,7 +19,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: 'sbt'
 
       - name: Cache SBT
         uses: actions/cache@v3
