@@ -7,6 +7,7 @@ object Converter {
   val BOLD_ITALIC_PATTERN = """(\*\*\*|___)(.+?)\1""".r
   val LINK_PATTERN = """\[(.+?)\]\((.+?)\)""".r
   val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
+  val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
 
   /**
    * Converts given markdown document to HTML document.
@@ -15,10 +16,10 @@ object Converter {
    * * Basic paragraphs.
    * * Headers.
    * * Codeblocks.
+   * * Horizontal rules.
    * * All the inline formatting features (see {@link convertInline}).
    * TODO:
    * * Lists (ordered and unordered).
-   * * Horizontal rules.
    * * Tables.
    */
   def convertDocument(source: String): String = {
@@ -59,6 +60,9 @@ object Converter {
       } else if (HEADER_PATTERN.matches(line)) {
         // This is a header.
         convertHeader(sb, line);
+      } else if (HORIZONTAL_RULE_PATTERN.matches(line)) {
+        flushCurrentGroup()
+        sb.append("<hr>\n")
       } else if (line == "") {
         // This is an empty line. Finalize previous line group.
         flushCurrentGroup()

@@ -9,4 +9,3 @@ This is a collection of small projects in Scala that I have implemented in order
 Credits:
  * ChatGPT - for project ideas.
  * [Alyson Silva](https://gist.github.com/allysonsilva) - for "Full Markdown" example.
-
