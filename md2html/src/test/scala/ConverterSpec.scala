@@ -44,6 +44,9 @@ class ConverterSpec extends AnyFunSuite {
     assert(Converter.convertInline("[text](link)") == "<a href=\"link\">text</a>")
   }
 
+  test("converts images") {
+    assert(Converter.convertInline("![alt text](image.png)") == "<img src=\"image.png\" alt=\"alt text\"/>")
+  }
 
   def readResource(path: String): String =
     Source.fromResource(path).mkString

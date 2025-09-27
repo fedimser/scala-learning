@@ -6,6 +6,7 @@ object Converter {
   val BOLD_PATTERN = """(\*\*|__)(.+?)\1""".r
   val BOLD_ITALIC_PATTERN = """(\*\*\*|___)(.+?)\1""".r
   val LINK_PATTERN = """\[(.+?)\]\((.+?)\)""".r
+  val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
 
   /**
    * Converts given markdown document to HTML document.
@@ -98,18 +99,20 @@ object Converter {
    * Supported features:
    * * Emphasis (italic, bold, bold italic).
    * * Hyperlinks.
+   * * Images.
    * TODO:
    * * Lists (ordered and unordered).
-   * * Images.
    * * Blockquotes.
    * * Inline code.
    * * Strikethrough text.
+   * * Reference-style links.
    */
   def convertInline(source: String): String = {
     var s = source
     s = BOLD_ITALIC_PATTERN.replaceAllIn(s, m => s"<strong><em>${m.group(2)}</em></strong>")
     s = BOLD_PATTERN.replaceAllIn(s, m => s"<strong>${m.group(2)}</strong>")
     s = ITALIC_PATTERN.replaceAllIn(s, m => s"<em>${m.group(2)}</em>")
+    s = IMAGE_PATTERN.replaceAllIn(s, m => s"""<img src="${m.group(2)}" alt="${m.group(1)}"/>""")
     s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
     return s
   };
