@@ -19,9 +19,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - name: Setup SBT
-        uses: actions/setup-sbt@v2
+          cache: 'sbt'
 
       - name: Cache SBT
         uses: actions/cache@v3
