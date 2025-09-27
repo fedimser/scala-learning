@@ -38,7 +38,7 @@ object Converter {
     }
 
     for (line <- lines) {
-      if (line == "```")  {
+      if (line.startsWith("```"))  {
         // Beginning or end of a code block.
         if (!isInsideCodeBlock) {
           // Code block starts.

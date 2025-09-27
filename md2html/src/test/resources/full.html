@@ -342,14 +342,10 @@ and multiple paragraphs.
 <pre style='background-color: #f0f0f0; padding: 10px;'>Inline `code` has `back-ticks around` it.</pre><p>
 Inline `code` has `back-ticks around` it.
 </p>
-<p>
-```c#
-using System.IO.Compression;
-</p>
-<p>
+<pre style='background-color: #f0f0f0; padding: 10px;'>using System.IO.Compression;
+
 #pragma warning disable 414, 3021
-</p>
-<p>
+
 namespace MyApplication
 {
 [Obsolete("...")]
@@ -361,11 +357,7 @@ Console.WriteLine($"Hello {Name}!");
 return new List<int>(new int[] { 1, 2, 3 })
 }
 }
-}
-</p>
-<pre style='background-color: #f0f0f0; padding: 10px;'>
-```css
-@font-face {
+}</pre><pre style='background-color: #f0f0f0; padding: 10px;'>@font-face {
 font-family: Chunkfive; src: url('Chunkfive.otf');
 }
 
@@ -379,28 +371,21 @@ font-family: Chunkfive, sans;
 a[href^=http]::after {
 content: attr(href)
 }
-}</pre><p>
-```javascript
-function $initHighlight(block, cls) {
+}</pre><pre style='background-color: #f0f0f0; padding: 10px;'>function $initHighlight(block, cls) {
 try {
 if (cls.search(/\bno\-highlight\b/) != -1)
 return process(block, true, 0x0F) +
 ` class="${cls}"`;
 } catch (e) {
-/<em> handle exception </em>/
+/* handle exception */
 }
 for (var i = 0 / 2; i < classes.length; i++) {
 if (checkCondition(classes[i]) === undefined)
 console.log('undefined');
 }
 }
-</p>
-<p>
-export  $initHighlight;
-</p>
-<pre style='background-color: #f0f0f0; padding: 10px;'>
-```php
-require_once 'Zend/Uri/Http.php';
+
+export  $initHighlight;</pre><pre style='background-color: #f0f0f0; padding: 10px;'>require_once 'Zend/Uri/Http.php';
 
 namespace Location\Web;
 
