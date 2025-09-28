@@ -103,6 +103,10 @@ class ConverterSpec extends AnyFunSuite {
     assert(!Converter.isTableSeparator("|--|"))
   }
 
+  test("escaping") {
+    assert(Converter.escapeHtml("< > &") == "&lt; &gt; &amp;")
+  }
+
   def readResource(path: String): String =
     Source.fromResource(path).mkString
 

@@ -17,6 +17,8 @@ object Converter {
   val OL_PREFIX_PATTERN = """^\s*\d+\.\s+""".r
   val UL_PREFIX_PATTERN = """^\s*[*+-]\s+""".r
   val REFERENCE_DEFINITION_PATTERN = """\s*\[(.+?)\]:\s*(\S+?)\s*""".r
+  val URL_PATTERN = """(?<![">])(https?://[^\s/$.?#].[^\s]*)""".r // Negative lookbehind: don't match if has " or > before.
+  val URL_IN_ANGLE_BRACKETS_PATTERN = """<(https?://[^\s>]+)>""".r
   val TABLE_SEPARATOR_PATTERN = """\|(\s*:?-{3,}:?\s*\|)+""".r // For simplicity, require leading and trailing pipes.
 
   def isListItem(line: String): Boolean = {
@@ -29,6 +31,15 @@ object Converter {
 
   def isTableSeparator(line: String): Boolean = {
     TABLE_SEPARATOR_PATTERN.matches(line)
+  }
+
+  def escapeHtml(s: String): String = {
+    s.flatMap {
+      case '<' => "&lt;"
+      case '>' => "&gt;"
+      case '&' => "&amp;"
+      case c => c.toString
+    }
   }
 
   def convertDocument(source: String): String = {
@@ -109,8 +120,8 @@ class Converter {
           isInsideCodeBlock = true
         } else {
           // Code block ends. Write current group to result as is.
-          sb.append("<pre style='background-color: #f0f0f0; padding: 10px;'>")
-          sb.append(currentGroup.mkString("\n"))
+          sb.append("<pre>")
+          sb.append(escapeHtml(currentGroup.mkString("\n")))
           sb.append("</pre>")
           currentGroup.clear()
           isInsideCodeBlock = false
@@ -272,6 +283,8 @@ class Converter {
       val url = refMap.getOrElse(m.group(1).toLowerCase, "")
       s"""<a href="$url">${m.group(1)}</a>"""
     })
+    s = URL_IN_ANGLE_BRACKETS_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
+    s = URL_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
     return s
   };
 
