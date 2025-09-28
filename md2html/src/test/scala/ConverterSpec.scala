@@ -95,12 +95,12 @@ class ConverterSpec extends AnyFunSuite {
     assert(!Converter.isListItem("** Aaa"))
   }
 
-  test("TableRenderer.isTableSeparator") {
-    assert(TableRenderer.isTableSeparator("|---|"))
-    assert(TableRenderer.isTableSeparator("|---|---|"))
-    assert(TableRenderer.isTableSeparator("|:---:|---:|:---|---|"))
-    assert(!TableRenderer.isTableSeparator("---"))
-    assert(!TableRenderer.isTableSeparator("|--|"))
+  test("isTableSeparator") {
+    assert(Converter.isTableSeparator("|---|"))
+    assert(Converter.isTableSeparator("|---|---|"))
+    assert(Converter.isTableSeparator("|:---:|---:|:---|---|"))
+    assert(!Converter.isTableSeparator("---"))
+    assert(!Converter.isTableSeparator("|--|"))
   }
 
   def readResource(path: String): String =

@@ -1,6 +1,6 @@
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 import scala.io.Source
-
 
 object Converter {
   val HEADER_PATTERN = raw"^#{1,6} +.*".r // 1–6 #, at least one space, then anything
@@ -14,6 +14,35 @@ object Converter {
   val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
   val OL_PREFIX_PATTERN = """^\s*\d+\.\s+""".r
   val UL_PREFIX_PATTERN = """^\s*[*+-]\s+""".r
+  val REFERENCE_DEFINITION_PATTERN = """\[(.+?)\]:\s*(\S+?)\s*""".r
+  val TABLE_SEPARATOR_PATTERN = """\|(\s*:?-{3,}:?\s*\|)+""".r // For simplicity, require leading and trailing pipes.
+
+  def isListItem(line: String): Boolean = {
+    return OL_PREFIX_PATTERN.findPrefixOf(line).isDefined || UL_PREFIX_PATTERN.findPrefixOf(line).isDefined
+  }
+
+  def getBlockquotePrefix(line: String): String = {
+    line.takeWhile(c => c == '>' || c == ' ')
+  }
+
+  def isTableSeparator(line: String): Boolean = {
+    TABLE_SEPARATOR_PATTERN.matches(line)
+  }
+
+  def convertDocument(source: String): String = {
+    return new Converter().convertDocument(source)
+  }
+
+  def convertInline(source: String): String = {
+    return new Converter().convertInline(source)
+  }
+}
+
+class Converter {
+  import Converter._
+
+  var sb: StringBuilder = new StringBuilder()
+  var refMap: mutable.Map[String, String] = mutable.Map[String, String]()
 
   /**
    * Converts given markdown document to HTML document.
@@ -33,7 +62,7 @@ object Converter {
       .linesIterator
       .toList
 
-    val sb = new StringBuilder()
+    sb = new StringBuilder()
     sb.append("<html>\n");
     sb.append("<head>\n<style>\n")
     sb.append(Source.fromResource("style.css").mkString)
@@ -49,10 +78,10 @@ object Converter {
     def flushCurrentGroup() = {
       if (currentGroup.nonEmpty) {
         if (isInsideList) {
-          convertList(sb, currentGroup.toList)
+          convertList(currentGroup.toList)
           isInsideList = false
         } else {
-          convertLineGroup(sb, currentGroup.toList)
+          convertLineGroup(currentGroup.toList)
         };
         currentGroup.clear()
       }
@@ -79,7 +108,7 @@ object Converter {
         currentGroup += line
       } else if (HEADER_PATTERN.matches(line)) {
         // This is a header.
-        convertHeader(sb, line);
+        convertHeader(line);
       } else if (HORIZONTAL_RULE_PATTERN.matches(line)) {
         flushCurrentGroup()
         sb.append("<hr>\n")
@@ -104,7 +133,7 @@ object Converter {
     return sb.toString
   }
 
-  def convertHeader(sb: StringBuilder, line: String) = {
+  def convertHeader(line: String) = {
     val level = line.takeWhile(_ == '#').length
     assert(line(level) == ' ')
     sb.append("<h" + level + ">")
@@ -113,15 +142,15 @@ object Converter {
   }
 
   // Converts group of lines without line breaks, which is normally a paragrpah.
-  def convertLineGroup(sb: StringBuilder, lineGroup: List[String]): Unit = {
+  def convertLineGroup(lineGroup: List[String]): Unit = {
     // If every line begins with ">", this is blockquote.
     if (lineGroup(0).startsWith(">")) {
-      convertBlockQuote(sb, lineGroup, 1)
+      convertBlockQuote(lineGroup, 1)
       return
     }
 
-    if (lineGroup.length >= 2 && TableRenderer.isTableSeparator(lineGroup(1))) {
-      new TableRenderer(sb).renderTable(lineGroup)
+    if (lineGroup.length >= 2 && isTableSeparator(lineGroup(1))) {
+      renderTable(lineGroup)
       return
     }
 
@@ -135,7 +164,7 @@ object Converter {
   }
 
   // Converts group of lines without line breaks, known to represent a list.
-  def convertList(sb: StringBuilder, lineGroup: List[String]): Unit = {
+  def convertList(lineGroup: List[String]): Unit = {
     val isUnordered = UL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
     val isOrdered = OL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
     assert(isUnordered || isOrdered)
@@ -158,7 +187,7 @@ object Converter {
       }
       sb.append("</li>\n")
       if (linesForNestedList.nonEmpty) {
-        convertList(sb, linesForNestedList)
+        convertList(linesForNestedList)
       }
       linesForCurrentItem.clear()
     }
@@ -182,13 +211,8 @@ object Converter {
     sb.append("</" + tag + ">\n")
   }
 
-  def isListItem(line: String): Boolean = {
-    return OL_PREFIX_PATTERN.findPrefixOf(line).isDefined || UL_PREFIX_PATTERN.findPrefixOf(line).isDefined
-  }
-
-
   // Converts group of lines known to be a blockquote.
-  def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer): Unit = {
+  def convertBlockQuote(lineGroup: List[String], level: Integer): Unit = {
     sb.append(s"<blockquote>\n")
 
     val numLinesAtThisLevel: Int = lineGroup.takeWhile(line => getBlockquotePrefix(line).count(_ == '>') <= level).size
@@ -200,14 +224,10 @@ object Converter {
     }
 
     if (linesAtNextLevel.nonEmpty) {
-      convertBlockQuote(sb, linesAtNextLevel, level + 1)
+      convertBlockQuote(linesAtNextLevel, level + 1)
     }
 
     sb.append("</blockquote>\n")
-  }
-
-  def getBlockquotePrefix(line: String): String = {
-    line.takeWhile(c => c == '>' || c == ' ')
   }
 
   /**
@@ -217,12 +237,10 @@ object Converter {
    *
    * Supported features:
    * * Emphasis (italic, bold, bold italic).
-   * * Hyperlinks.
+   * * Hyperlinks (including reference-style links).
    * * Images.
    * * Strikethrough text.
    * * Inline code.
-   * TODO:
-   * * Reference-style links.
    */
   def convertInline(source: String): String = {
     var s = source
@@ -236,4 +254,45 @@ object Converter {
     return s
   };
 
+  // Column styles for current table.
+  private var colStyles: Array[String] = Array()
+
+  def renderTable(lineGroup: List[String]): Unit = {
+    assert(lineGroup.size >= 2)
+    assert(isTableSeparator(lineGroup(1)))
+
+    // Infer alignment.
+    colStyles = lineGroup(1).split("\\|").drop(1).map(_.trim).map(x => columnSpecToStyle(x))
+
+    sb.append("<table>\n")
+    renderTableRow(lineGroup(0), "th")
+    for (i <- 2 until lineGroup.length) {
+      renderTableRow(lineGroup(i), "td")
+    }
+    sb.append("</table>\n")
+  }
+
+  def renderTableRow(line: String, cellTag: String) = {
+    sb.append("<tr>\n")
+    val cells = line.split("(?<!\\\\)\\|").map(_.replaceAllLiterally("\\|", "|")).drop(1)
+    for (i <- 0 until Math.min(colStyles.size, cells.size)) {
+      sb.append(s"<$cellTag${colStyles(i)}>")
+      sb.append(convertInline(cells(i)))
+      sb.append(s"</$cellTag>\n")
+    }
+    sb.append("</tr>\n")
+  }
+
+  def columnSpecToStyle(spec: String): String = {
+    if (spec.startsWith(":") && spec.endsWith(":")) {
+      return " style='text-align: center;'"
+    } else if (spec.startsWith(":")) {
+      return " style='text-align: left;'"
+    } else if (spec.endsWith(":")) {
+      return " style='text-align: right;'"
+    } else {
+      return ""
+    }
+  }
 }
+
