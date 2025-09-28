@@ -11,12 +11,13 @@ object Converter {
   val REF_STYLE_LINK_PATTERN = """\[(.+?)\]\[(.+?)\]""".r
   val SELF_REF_LINK_PATTERN = """\[(.+?)\]""".r
   val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
+  val REF_STYLE_IMAGE_PATTERN = """!\[(.*?)\]\[(.*?)\]""".r
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
   val STRIKE_THROUGH_PATTERN = """(~~)(.+?)\1""".r
   val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
   val OL_PREFIX_PATTERN = """^\s*\d+\.\s+""".r
   val UL_PREFIX_PATTERN = """^\s*[*+-]\s+""".r
-  val REFERENCE_DEFINITION_PATTERN = """\s*\[(.+?)\]:\s*(\S+?)\s*""".r
+  val REFERENCE_DEFINITION_PATTERN = """\s*\[(.+?)\]:\s*(\S+?)(?:\s+.+)?\s*""".r
   val URL_PATTERN = """(?<![">])(https?://[^\s/$.?#].[^\s]*)""".r // Negative lookbehind: don't match if has " or > before.
   val URL_IN_ANGLE_BRACKETS_PATTERN = """<(https?://[^\s>]+)>""".r
   val TABLE_SEPARATOR_PATTERN = """\|(\s*:?-{3,}:?\s*\|)+""".r // For simplicity, require leading and trailing pipes.
@@ -272,6 +273,7 @@ class Converter {
     s = BOLD_PATTERN.replaceAllIn(s, m => s"<strong>${m.group(2)}</strong>")
     s = ITALIC_PATTERN.replaceAllIn(s, m => s"<em>${m.group(2)}</em>")
     s = IMAGE_PATTERN.replaceAllIn(s, m => s"""<img src="${m.group(2)}" alt="${m.group(1)}"/>""")
+    s = REF_STYLE_IMAGE_PATTERN.replaceAllIn(s, m => s"""<img src="${refToUrl(m.group(2))}" alt="${m.group(1)}"/>""")
     s = STRIKE_THROUGH_PATTERN.replaceAllIn(s, m => s"<del>${m.group(2)}</del>")
     s = INLINE_CODE_PATTERN.replaceAllIn(s, m => s"<code>${m.group(2)}</code>")
     s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
@@ -279,14 +281,13 @@ class Converter {
       val url = refMap.getOrElse(m.group(2).toLowerCase, "")
       s"""<a href="$url">${m.group(1)}</a>"""
     })
-    s = SELF_REF_LINK_PATTERN.replaceAllIn(s, m => {
-      val url = refMap.getOrElse(m.group(1).toLowerCase, "")
-      s"""<a href="$url">${m.group(1)}</a>"""
-    })
+    s = SELF_REF_LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${refToUrl(m.group(1))}">${m.group(1)}</a>""")
     s = URL_IN_ANGLE_BRACKETS_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
     s = URL_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
     return s
   };
+
+  def refToUrl(ref: String) : String = refMap.getOrElse(ref.toLowerCase, "")
 
   // Column styles for current table.
   private var colStyles: Array[String] = Array()
@@ -329,4 +330,3 @@ class Converter {
     }
   }
 }
-
