@@ -8,13 +8,15 @@ object Converter {
   val BOLD_PATTERN = """(\*\*|__)(.+?)\1""".r
   val BOLD_ITALIC_PATTERN = """(\*\*\*|___)(.+?)\1""".r
   val LINK_PATTERN = """\[(.+?)\]\((.+?)\)""".r
+  val REF_STYLE_LINK_PATTERN = """\[(.+?)\]\[(.+?)\]""".r
+  val SELF_REF_LINK_PATTERN = """\[(.+?)\]""".r
   val IMAGE_PATTERN = """!\[(.*?)\]\((.*?)\)""".r
   val HORIZONTAL_RULE_PATTERN = """^\s*([-*_])(\s*\1){2,}\s*$""".r
   val STRIKE_THROUGH_PATTERN = """(~~)(.+?)\1""".r
   val INLINE_CODE_PATTERN = """(`)(.+?)\1""".r
   val OL_PREFIX_PATTERN = """^\s*\d+\.\s+""".r
   val UL_PREFIX_PATTERN = """^\s*[*+-]\s+""".r
-  val REFERENCE_DEFINITION_PATTERN = """\[(.+?)\]:\s*(\S+?)\s*""".r
+  val REFERENCE_DEFINITION_PATTERN = """\s*\[(.+?)\]:\s*(\S+?)\s*""".r
   val TABLE_SEPARATOR_PATTERN = """\|(\s*:?-{3,}:?\s*\|)+""".r // For simplicity, require leading and trailing pipes.
 
   def isListItem(line: String): Boolean = {
@@ -39,6 +41,7 @@ object Converter {
 }
 
 class Converter {
+
   import Converter._
 
   var sb: StringBuilder = new StringBuilder()
@@ -61,6 +64,14 @@ class Converter {
     val lines: List[String] = source
       .linesIterator
       .toList
+
+    // Extract reference definitions.
+    for (line <- lines) {
+      line match {
+        case REFERENCE_DEFINITION_PATTERN(label, url) => refMap(label.toLowerCase) = url
+        case _ =>  { }
+      }
+    }
 
     sb = new StringBuilder()
     sb.append("<html>\n");
@@ -121,6 +132,8 @@ class Converter {
         flushCurrentGroup()
         currentGroup += line;
         isInsideList = true
+      } else if (REFERENCE_DEFINITION_PATTERN.matches(line)) {
+        // Don't render this line.
       } else {
         // Append line to the current group.
         currentGroup += line;
@@ -248,9 +261,17 @@ class Converter {
     s = BOLD_PATTERN.replaceAllIn(s, m => s"<strong>${m.group(2)}</strong>")
     s = ITALIC_PATTERN.replaceAllIn(s, m => s"<em>${m.group(2)}</em>")
     s = IMAGE_PATTERN.replaceAllIn(s, m => s"""<img src="${m.group(2)}" alt="${m.group(1)}"/>""")
-    s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
     s = STRIKE_THROUGH_PATTERN.replaceAllIn(s, m => s"<del>${m.group(2)}</del>")
     s = INLINE_CODE_PATTERN.replaceAllIn(s, m => s"<code>${m.group(2)}</code>")
+    s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
+    s = REF_STYLE_LINK_PATTERN.replaceAllIn(s, m => {
+      val url = refMap.getOrElse(m.group(2).toLowerCase, "")
+      s"""<a href="$url">${m.group(1)}</a>"""
+    })
+    s = SELF_REF_LINK_PATTERN.replaceAllIn(s, m => {
+      val url = refMap.getOrElse(m.group(1).toLowerCase, "")
+      s"""<a href="$url">${m.group(1)}</a>"""
+    })
     return s
   };
 
