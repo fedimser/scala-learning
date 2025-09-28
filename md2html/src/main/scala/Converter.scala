@@ -1,6 +1,7 @@
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
+
 object Converter {
   val HEADER_PATTERN = raw"^#{1,6} +.*".r // 1–6 #, at least one space, then anything
   val ITALIC_PATTERN = """(\*|_)(.+?)\1""".r
@@ -24,9 +25,8 @@ object Converter {
    * * Horizontal rules.
    * * Blockquotes.
    * * Lists (ordered and unordered, with nesting).
-   * * All the inline formatting features (see {@link convertInline}).
-   * TODO:
    * * Tables.
+   * * All the inline formatting features (see {@link convertInline}).
    */
   def convertDocument(source: String): String = {
     val lines: List[String] = source
@@ -113,10 +113,15 @@ object Converter {
   }
 
   // Converts group of lines without line breaks, which is normally a paragrpah.
-  def convertLineGroup(sb: StringBuilder, lineGroup: List[String]) : Unit = {
+  def convertLineGroup(sb: StringBuilder, lineGroup: List[String]): Unit = {
     // If every line begins with ">", this is blockquote.
     if (lineGroup(0).startsWith(">")) {
       convertBlockQuote(sb, lineGroup, 1)
+      return
+    }
+
+    if (lineGroup.length >= 2 && TableRenderer.isTableSeparator(lineGroup(1))) {
+      new TableRenderer(sb).renderTable(lineGroup)
       return
     }
 
@@ -130,13 +135,13 @@ object Converter {
   }
 
   // Converts group of lines without line breaks, known to represent a list.
-  def convertList(sb: StringBuilder, lineGroup: List[String]) : Unit = {
+  def convertList(sb: StringBuilder, lineGroup: List[String]): Unit = {
     val isUnordered = UL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
     val isOrdered = OL_PREFIX_PATTERN.findPrefixOf(lineGroup(0)).isDefined
     assert(isUnordered || isOrdered)
     val tag = if (isUnordered) "ul" else "ol"
-    val prefixPattern =  if (isUnordered) UL_PREFIX_PATTERN else OL_PREFIX_PATTERN
-    sb.append("<"+ tag + ">\n")
+    val prefixPattern = if (isUnordered) UL_PREFIX_PATTERN else OL_PREFIX_PATTERN
+    sb.append("<" + tag + ">\n")
 
     var linesForCurrentItem = ListBuffer[String]()
 
@@ -174,16 +179,16 @@ object Converter {
     }
     finalizeListItem()
 
-    sb.append("</"+ tag + ">\n")
+    sb.append("</" + tag + ">\n")
   }
 
-  def isListItem(line:String) : Boolean = {
+  def isListItem(line: String): Boolean = {
     return OL_PREFIX_PATTERN.findPrefixOf(line).isDefined || UL_PREFIX_PATTERN.findPrefixOf(line).isDefined
   }
 
 
   // Converts group of lines known to be a blockquote.
-  def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer) : Unit = {
+  def convertBlockQuote(sb: StringBuilder, lineGroup: List[String], level: Integer): Unit = {
     sb.append(s"<blockquote>\n")
 
     val numLinesAtThisLevel: Int = lineGroup.takeWhile(line => getBlockquotePrefix(line).count(_ == '>') <= level).size
