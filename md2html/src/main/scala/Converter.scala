@@ -277,10 +277,7 @@ class Converter {
     s = STRIKE_THROUGH_PATTERN.replaceAllIn(s, m => s"<del>${m.group(2)}</del>")
     s = INLINE_CODE_PATTERN.replaceAllIn(s, m => s"<code>${m.group(2)}</code>")
     s = LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(2)}">${m.group(1)}</a>""")
-    s = REF_STYLE_LINK_PATTERN.replaceAllIn(s, m => {
-      val url = refMap.getOrElse(m.group(2).toLowerCase, "")
-      s"""<a href="$url">${m.group(1)}</a>"""
-    })
+    s = REF_STYLE_LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${refToUrl(m.group(2))}">${m.group(1)}</a>""")
     s = SELF_REF_LINK_PATTERN.replaceAllIn(s, m => s"""<a href="${refToUrl(m.group(1))}">${m.group(1)}</a>""")
     s = URL_IN_ANGLE_BRACKETS_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
     s = URL_PATTERN.replaceAllIn(s, m => s"""<a href="${m.group(1)}">${m.group(1)}</a>""")
